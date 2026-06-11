@@ -22,47 +22,53 @@
 
 ## 1. Philosophy
 
-This boilerplate follows **Feature-Sliced Design (FSD)** — a layered, modular architecture that organizes code by *what it does for the user*, not *what kind of file it is*.
+This boilerplate follows **Feature-Sliced Design (FSD)**. Think of FSD like a **Restaurant**:
 
-### Why not flat folders like `components/`, `hooks/`, `utils/`?
+1. **`shared/` (The Ingredients & Tools)**: Flour, tomatoes, salt, ovens. Basic UI buttons, fetch functions, pure utilities. They don't know what dish they will become.
+2. **`features/` (The Recipes/Dishes)**: Pizza, Pasta, Burger. Here you combine ingredients to make a complete, working business logic slice (like an `ExampleList` with its own API calls and state). A Pizza doesn't need to know how a Burger is made.
+3. **`widgets/` (Combo Meals)**: A meal deal that includes a Burger, Fries, and a Drink. Combining multiple features into one larger UI block (like a Header with User Profile + Notifications).
+4. **`pages/` (The Menu)**: The physical menu handed to the customer. It just places the dishes (features) on specific routes/URLs.
+5. **`app/` (The Restaurant Building)**: The electricity, plumbing, and front door. This is where global providers (Dark Mode, React Query, Routing) wrap everything together.
 
-Because at scale, flat folders become dumping grounds. After 30+ components in a single `components/` directory, nobody knows which feature owns what. FSD solves this with two rules:
+### The Golden Rule of FSD (Dependency Flow)
+**Code can only import from layers BELOW it. Never above it, and never sideways (feature to feature).**
+- ✅ `pages/` can import from `features/` and `shared/`.
+- ✅ `features/` can import from `shared/`.
+- ❌ `features/` MUST NEVER import from `pages/` or `app/`.
+- ❌ `features/pizza` MUST NEVER import from `features/burger`. (If they share something, it goes in `shared/`).
 
-1. **Vertical slicing**: Each feature owns its entire stack — UI, API calls, hooks, store, types, utils, and tests.
-2. **Strict dependency direction**: Code flows **downward only**. A feature can import from `shared/`, but `shared/` can never import from a feature.
-
-```
+```text
 ┌─────────────────────────────────────┐
-│              app/                    │  ← Wiring layer (providers, router, entry)
+│              app/                    │  ← Building (Providers, Router)
 ├─────────────────────────────────────┤
-│             pages/                   │  ← Composition layer (assembles features into routes)
+│             pages/                   │  ← Menu (Route URL Compositions)
 ├─────────────────────────────────────┤
-│           widgets/                   │  ← Composite UI blocks (cross-feature compositions)
+│           widgets/                   │  ← Combo Meals (Cross-feature UI)
 ├─────────────────────────────────────┤
-│           features/                  │  ← Business logic slices (self-contained domains)
+│           features/                  │  ← Recipes (Self-contained domains)
 ├─────────────────────────────────────┤
-│            shared/                   │  ← Shared foundation (UI kit, lib, utils, types)
+│            shared/                   │  ← Ingredients (UI kit, lib, utils)
 └─────────────────────────────────────┘
          ▲ Dependencies flow DOWN only
 ```
-
-> [!IMPORTANT]
-> **The Golden Rule**: Higher layers depend on lower layers. Never the reverse. `features/` can import from `shared/`. `pages/` can import from `features/` and `shared/`. But `shared/` must NEVER import from `features/` or `pages/`.
 
 ---
 
 ## 2. Directory Tree
 
 ```
-src/
-├── app/                                    # Application wiring layer
-│   ├── App.tsx                             # Root component
-│   ├── main.tsx                            # Vite entry point
-│   ├── providers/
-│   │   ├── AppProviders.tsx                # Composed provider tree
-│   │   ├── QueryProvider.tsx               # React Query client + config
-│   │   ├── ErrorBoundaryProvider.tsx        # Global error boundary
-│   │   └── index.ts
+├── .github/                                # GitHub Actions (Automated CI checks)
+├── .storybook/                             # Storybook configuration files
+├── src/
+│   ├── app/                                    # Application wiring layer
+│   │   ├── App.tsx                             # Root component
+│   │   ├── main.tsx                            # Vite entry point
+│   │   ├── providers/
+│   │   │   ├── AppProviders.tsx                # Composed provider tree
+│   │   │   ├── ThemeProvider.tsx               # Dark mode state provider (next-themes)
+│   │   │   ├── QueryProvider.tsx               # React Query client + config
+│   │   │   ├── ErrorBoundaryProvider.tsx        # Global error boundary
+│   │   │   └── index.ts
 │   ├── router/
 │   │   ├── routes.tsx                      # All route definitions
 │   │   ├── ProtectedRoute.tsx              # Auth guard wrapper
@@ -218,7 +224,7 @@ src/
 
 ## 3. Layer Responsibilities
 
-### `app/` — Application Wiring
+### `app/` — Application Wiring (The Building)
 
 This is the **bootstrap layer**. It wires everything together but contains **zero business logic**.
 
@@ -226,9 +232,10 @@ This is the **bootstrap layer**. It wires everything together but contains **zer
 |---|---|---|
 | Entry point | `main.tsx` | Renders `<App />` into the DOM |
 | Root component | `App.tsx` | Composes `<AppProviders>` + `<RouterProvider>` + global toast/notification UI |
-| Providers | `providers/AppProviders.tsx` | Nests all context providers in correct order |
+| Providers | `providers/AppProviders.tsx` | Nests all context providers (Theme, Query, Error) in correct order |
+| Theme/Dark Mode | `providers/ThemeProvider.tsx` | Initializes `next-themes` to manage `.dark` class globally |
 | Routing | `router/routes.tsx` | Declares every route, wraps with guards, lazy-loads pages |
-| Global styles | `styles/index.css` | Tailwind directives, CSS custom properties, global resets |
+| Global styles | `styles/index.css` | Tailwind directives, Dark Mode custom variants, global resets |
 
 > [!NOTE]
 > The `app/` layer is the only layer allowed to reach into every other layer. It's the composition root.
@@ -301,7 +308,8 @@ Everything generic and reusable. **Zero business domain knowledge.**
 
 | Subdirectory | Contains | Rule |
 |---|---|---|
-| `ui/` | Generic UI components (Button, Modal, Input, Card) | Must work without any feature context |
+| `ui/` | Generic UI (Button, Modal, ThemeToggle) | Must work without any feature context |
+| `ui/**/*.stories.tsx` | Storybook documentation | Visually test UI components in isolation |
 | `layouts/` | Page shells (MainLayout, AuthLayout) | Structural wrappers with `<Outlet />` |
 | `lib/` | Third-party library configurations | Axios instance, QueryClient factory, day.js setup |
 | `config/` | App-wide configuration | Env validation, route constants, magic values |
