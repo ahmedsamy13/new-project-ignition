@@ -1,8 +1,6 @@
 # ARCHITECTURE.md — Universal React Boilerplate
 
-> **Audience**: Senior Developer → Entry-Level Developer onboarding guide.
-> **Tone**: Practical, opinionated, no fluff. You're expected to know React basics.
-> This document answers two questions: *Why does this structure scale?* and *Where do I put things?*
+> This document answers two questions: _Why does this structure scale?_ and _Where do I put things?_
 
 ---
 
@@ -31,7 +29,9 @@ This boilerplate follows **Feature-Sliced Design (FSD)**. Think of FSD like a **
 5. **`app/` (The Restaurant Building)**: The electricity, plumbing, and front door. This is where global providers (Dark Mode, React Query, Routing) wrap everything together.
 
 ### The Golden Rule of FSD (Dependency Flow)
+
 **Code can only import from layers BELOW it. Never above it, and never sideways (feature to feature).**
+
 - ✅ `pages/` can import from `features/` and `shared/`.
 - ✅ `features/` can import from `shared/`.
 - ❌ `features/` MUST NEVER import from `pages/` or `app/`.
@@ -228,14 +228,14 @@ This boilerplate follows **Feature-Sliced Design (FSD)**. Think of FSD like a **
 
 This is the **bootstrap layer**. It wires everything together but contains **zero business logic**.
 
-| Concern | File | Purpose |
-|---|---|---|
-| Entry point | `main.tsx` | Renders `<App />` into the DOM |
-| Root component | `App.tsx` | Composes `<AppProviders>` + `<RouterProvider>` + global toast/notification UI |
-| Providers | `providers/AppProviders.tsx` | Nests all context providers (Theme, Query, Error) in correct order |
-| Theme/Dark Mode | `providers/ThemeProvider.tsx` | Initializes `next-themes` to manage `.dark` class globally |
-| Routing | `router/routes.tsx` | Declares every route, wraps with guards, lazy-loads pages |
-| Global styles | `styles/index.css` | Tailwind directives, Dark Mode custom variants, global resets |
+| Concern         | File                          | Purpose                                                                       |
+| --------------- | ----------------------------- | ----------------------------------------------------------------------------- |
+| Entry point     | `main.tsx`                    | Renders `<App />` into the DOM                                                |
+| Root component  | `App.tsx`                     | Composes `<AppProviders>` + `<RouterProvider>` + global toast/notification UI |
+| Providers       | `providers/AppProviders.tsx`  | Nests all context providers (Theme, Query, Error) in correct order            |
+| Theme/Dark Mode | `providers/ThemeProvider.tsx` | Initializes `next-themes` to manage `.dark` class globally                    |
+| Routing         | `router/routes.tsx`           | Declares every route, wraps with guards, lazy-loads pages                     |
+| Global styles   | `styles/index.css`            | Tailwind directives, Dark Mode custom variants, global resets                 |
 
 > [!NOTE]
 > The `app/` layer is the only layer allowed to reach into every other layer. It's the composition root.
@@ -267,6 +267,7 @@ export function ExampleListPage() {
 ```
 
 **Rules**:
+
 - Pages must NOT contain business logic, API calls, or state management.
 - Pages must NOT define their own hooks.
 - A page's job is to compose, not compute.
@@ -278,6 +279,7 @@ export function ExampleListPage() {
 Widgets are **larger UI compositions that combine shared UI components and potentially data from multiple features**. Think: a `Header` that shows auth status AND notification count, or a `DataTable` with sorting/filtering/pagination built in.
 
 **When to use `widgets/` vs `shared/ui/`**:
+
 - `shared/ui/Button` → pure UI, zero data awareness, works anywhere
 - `widgets/header/Header` → knows about layout, may pull from auth or notification features
 
@@ -287,15 +289,15 @@ Widgets are **larger UI compositions that combine shared UI components and poten
 
 This is where your application actually lives. Each feature is a **vertical slice** that owns everything it needs:
 
-| Subdirectory | Contains | Example |
-|---|---|---|
-| `api/` | Raw HTTP functions using the shared Axios instance | `getExamples()`, `createExample()` |
-| `hooks/` | React Query hooks wrapping API calls + UI logic hooks | `useExamples()`, `useExampleFilters()` |
-| `components/` | Feature-specific React components | `ExampleCard`, `ExampleForm` |
-| `store/` | Client-side state (Zustand slices) | `useExampleStore` |
-| `types/` | TypeScript interfaces, DTOs, enums for this domain | `Example`, `CreateExampleDTO` |
-| `utils/` | Pure helper functions scoped to this feature | `calculateExampleMetrics()` |
-| `index.ts` | **Public API** — the ONLY file other layers import from | Barrel re-exports |
+| Subdirectory  | Contains                                                | Example                                |
+| ------------- | ------------------------------------------------------- | -------------------------------------- |
+| `api/`        | Raw HTTP functions using the shared Axios instance      | `getExamples()`, `createExample()`     |
+| `hooks/`      | React Query hooks wrapping API calls + UI logic hooks   | `useExamples()`, `useExampleFilters()` |
+| `components/` | Feature-specific React components                       | `ExampleCard`, `ExampleForm`           |
+| `store/`      | Client-side state (Zustand slices)                      | `useExampleStore`                      |
+| `types/`      | TypeScript interfaces, DTOs, enums for this domain      | `Example`, `CreateExampleDTO`          |
+| `utils/`      | Pure helper functions scoped to this feature            | `calculateExampleMetrics()`            |
+| `index.ts`    | **Public API** — the ONLY file other layers import from | Barrel re-exports                      |
 
 > [!CAUTION]
 > **The `index.ts` barrel is a contract.** Other layers (pages, widgets, other features) must ONLY import from `@/features/example-feature` — never reach into internal paths like `@/features/example-feature/hooks/useExamples`. If it's not in the barrel, it's private.
@@ -306,16 +308,16 @@ This is where your application actually lives. Each feature is a **vertical slic
 
 Everything generic and reusable. **Zero business domain knowledge.**
 
-| Subdirectory | Contains | Rule |
-|---|---|---|
-| `ui/` | Generic UI (Button, Modal, ThemeToggle) | Must work without any feature context |
-| `ui/**/*.stories.tsx` | Storybook documentation | Visually test UI components in isolation |
-| `layouts/` | Page shells (MainLayout, AuthLayout) | Structural wrappers with `<Outlet />` |
-| `lib/` | Third-party library configurations | Axios instance, QueryClient factory, day.js setup |
-| `config/` | App-wide configuration | Env validation, route constants, magic values |
-| `hooks/` | Generic reusable hooks | `useDebounce`, `useLocalStorage` — no business logic |
-| `utils/` | Pure utility functions | `cn()`, formatters, validators |
-| `types/` | Global TypeScript types | `ApiResponse<T>`, `BaseEntity`, `ID` |
+| Subdirectory          | Contains                                | Rule                                                 |
+| --------------------- | --------------------------------------- | ---------------------------------------------------- |
+| `ui/`                 | Generic UI (Button, Modal, ThemeToggle) | Must work without any feature context                |
+| `ui/**/*.stories.tsx` | Storybook documentation                 | Visually test UI components in isolation             |
+| `layouts/`            | Page shells (MainLayout, AuthLayout)    | Structural wrappers with `<Outlet />`                |
+| `lib/`                | Third-party library configurations      | Axios instance, QueryClient factory, day.js setup    |
+| `config/`             | App-wide configuration                  | Env validation, route constants, magic values        |
+| `hooks/`              | Generic reusable hooks                  | `useDebounce`, `useLocalStorage` — no business logic |
+| `utils/`              | Pure utility functions                  | `cn()`, formatters, validators                       |
+| `types/`              | Global TypeScript types                 | `ApiResponse<T>`, `BaseEntity`, `ID`                 |
 
 ---
 
@@ -362,7 +364,7 @@ apiClient.interceptors.response.use(
       window.location.href = "/login";
     }
     return Promise.reject(error);
-  }
+  },
 );
 ```
 
@@ -396,7 +398,10 @@ interface ErrorFallbackProps {
   resetErrorBoundary: () => void;
 }
 
-export function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps) {
+export function ErrorFallback({
+  error,
+  resetErrorBoundary,
+}: ErrorFallbackProps) {
   return (
     <div role="alert" className="...">
       <p>Something went wrong:</p>
@@ -420,9 +425,17 @@ export function ErrorFallback({ error, resetErrorBoundary }: ErrorFallbackProps)
 // app/router/LazyImports.ts
 import { lazy } from "react";
 
-export const HomePage = lazy(() => import("@/pages/home").then(m => ({ default: m.HomePage })));
-export const DashboardPage = lazy(() => import("@/pages/dashboard").then(m => ({ default: m.DashboardPage })));
-export const ExampleListPage = lazy(() => import("@/pages/example-feature").then(m => ({ default: m.ExampleListPage })));
+export const HomePage = lazy(() =>
+  import("@/pages/home").then((m) => ({ default: m.HomePage })),
+);
+export const DashboardPage = lazy(() =>
+  import("@/pages/dashboard").then((m) => ({ default: m.DashboardPage })),
+);
+export const ExampleListPage = lazy(() =>
+  import("@/pages/example-feature").then((m) => ({
+    default: m.ExampleListPage,
+  })),
+);
 // ... all lazy page imports live here
 ```
 
@@ -449,8 +462,22 @@ export const router = createBrowserRouter([
       {
         element: <AuthLayout />,
         children: [
-          { path: ROUTES.LOGIN, element: <SuspenseWrapper><Pages.LoginPage /></SuspenseWrapper> },
-          { path: ROUTES.REGISTER, element: <SuspenseWrapper><Pages.RegisterPage /></SuspenseWrapper> },
+          {
+            path: ROUTES.LOGIN,
+            element: (
+              <SuspenseWrapper>
+                <Pages.LoginPage />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: ROUTES.REGISTER,
+            element: (
+              <SuspenseWrapper>
+                <Pages.RegisterPage />
+              </SuspenseWrapper>
+            ),
+          },
         ],
       },
     ],
@@ -462,9 +489,30 @@ export const router = createBrowserRouter([
       {
         element: <MainLayout />,
         children: [
-          { path: ROUTES.HOME, element: <SuspenseWrapper><Pages.HomePage /></SuspenseWrapper> },
-          { path: ROUTES.DASHBOARD, element: <SuspenseWrapper><Pages.DashboardPage /></SuspenseWrapper> },
-          { path: ROUTES.EXAMPLES, element: <SuspenseWrapper><Pages.ExampleListPage /></SuspenseWrapper> },
+          {
+            path: ROUTES.HOME,
+            element: (
+              <SuspenseWrapper>
+                <Pages.HomePage />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: ROUTES.DASHBOARD,
+            element: (
+              <SuspenseWrapper>
+                <Pages.DashboardPage />
+              </SuspenseWrapper>
+            ),
+          },
+          {
+            path: ROUTES.EXAMPLES,
+            element: (
+              <SuspenseWrapper>
+                <Pages.ExampleListPage />
+              </SuspenseWrapper>
+            ),
+          },
         ],
       },
     ],
@@ -593,11 +641,11 @@ import { useExamples } from "@/features/example-feature/hooks/useExamples";
 
 ### Rule 2: Generic UI → `shared/ui/`. Domain UI → `features/<name>/components/`.
 
-Ask yourself: *"Does this component need to know about the business domain to work?"*
+Ask yourself: _"Does this component need to know about the business domain to work?"_
 
-| Answer | Location | Example |
-|---|---|---|
-| **No** — it's a pure UI primitive | `shared/ui/` | `Button`, `Modal`, `Input`, `Card`, `Spinner` |
+| Answer                                    | Location                      | Example                                       |
+| ----------------------------------------- | ----------------------------- | --------------------------------------------- |
+| **No** — it's a pure UI primitive         | `shared/ui/`                  | `Button`, `Modal`, `Input`, `Card`, `Spinner` |
 | **Yes** — it renders domain-specific data | `features/<name>/components/` | `ExampleCard`, `WorkoutTimer`, `ExerciseForm` |
 
 A `Button` doesn't care if it's in a workout app or a banking app. An `ExampleCard` renders `Example` domain objects — it belongs to the feature.
@@ -649,11 +697,11 @@ features/example-feature/
 
 ### Rule 5: Server State = React Query. Client State = Zustand. Never Mix.
 
-| State Type | Tool | Example |
-|---|---|---|
-| Server state (data from API) | React Query (`useQuery`, `useMutation`) | User profile, list of examples, dashboard metrics |
-| Client state (UI-only, ephemeral) | Zustand store | Sidebar open/closed, active filters, selected items, form drafts |
-| URL state (shareable, bookmarkable) | React Router (`useSearchParams`) | Current page, sort order, active tab |
+| State Type                          | Tool                                    | Example                                                          |
+| ----------------------------------- | --------------------------------------- | ---------------------------------------------------------------- |
+| Server state (data from API)        | React Query (`useQuery`, `useMutation`) | User profile, list of examples, dashboard metrics                |
+| Client state (UI-only, ephemeral)   | Zustand store                           | Sidebar open/closed, active filters, selected items, form drafts |
+| URL state (shareable, bookmarkable) | React Router (`useSearchParams`)        | Current page, sort order, active tab                             |
 
 ```typescript
 // ❌ Don't store server data in Zustand
@@ -676,18 +724,18 @@ const useExampleStore = create((set) => ({
 
 ### Files & Folders
 
-| Type | Convention | Example |
-|---|---|---|
-| Feature folders | `kebab-case` | `example-feature/`, `user-settings/` |
-| React components | `PascalCase.tsx` | `ExampleCard.tsx`, `ErrorFallback.tsx` |
-| Hooks | `camelCase.ts`, prefixed with `use` | `useExamples.ts`, `useDebounce.ts` |
-| Utilities / helpers | `camelCase.ts` | `formatters.ts`, `validators.ts` |
-| Store files | `camelCase.ts`, suffixed with `Store` | `exampleStore.ts`, `authStore.ts` |
-| API files | `camelCase.ts`, suffixed with `Api` | `exampleApi.ts`, `authApi.ts` |
-| Types files | `camelCase.ts`, suffixed with `.types` | `example.types.ts`, `api.types.ts` |
-| Test files | Mirror source + `.test.ts(x)` | `ExampleCard.test.tsx`, `useExamples.test.ts` |
-| Barrel exports | `index.ts` | Always `index.ts` — never `index.tsx` for barrels |
-| Constants | `SCREAMING_SNAKE_CASE` values in `camelCase.ts` files | `const MAX_RETRY_COUNT = 3;` |
+| Type                | Convention                                            | Example                                           |
+| ------------------- | ----------------------------------------------------- | ------------------------------------------------- |
+| Feature folders     | `kebab-case`                                          | `example-feature/`, `user-settings/`              |
+| React components    | `PascalCase.tsx`                                      | `ExampleCard.tsx`, `ErrorFallback.tsx`            |
+| Hooks               | `camelCase.ts`, prefixed with `use`                   | `useExamples.ts`, `useDebounce.ts`                |
+| Utilities / helpers | `camelCase.ts`                                        | `formatters.ts`, `validators.ts`                  |
+| Store files         | `camelCase.ts`, suffixed with `Store`                 | `exampleStore.ts`, `authStore.ts`                 |
+| API files           | `camelCase.ts`, suffixed with `Api`                   | `exampleApi.ts`, `authApi.ts`                     |
+| Types files         | `camelCase.ts`, suffixed with `.types`                | `example.types.ts`, `api.types.ts`                |
+| Test files          | Mirror source + `.test.ts(x)`                         | `ExampleCard.test.tsx`, `useExamples.test.ts`     |
+| Barrel exports      | `index.ts`                                            | Always `index.ts` — never `index.tsx` for barrels |
+| Constants           | `SCREAMING_SNAKE_CASE` values in `camelCase.ts` files | `const MAX_RETRY_COUNT = 3;`                      |
 
 ### React Query Keys
 
@@ -696,11 +744,11 @@ Use a factory pattern for type-safe, hierarchical cache keys:
 ```typescript
 // features/example-feature/api/exampleApi.ts
 export const exampleKeys = {
-  all:      ["examples"] as const,
-  lists:    () => [...exampleKeys.all, "list"] as const,
-  list:     (filters: ExampleFilters) => [...exampleKeys.lists(), filters] as const,
-  details:  () => [...exampleKeys.all, "detail"] as const,
-  detail:   (id: string) => [...exampleKeys.details(), id] as const,
+  all: ["examples"] as const,
+  lists: () => [...exampleKeys.all, "list"] as const,
+  list: (filters: ExampleFilters) => [...exampleKeys.lists(), filters] as const,
+  details: () => [...exampleKeys.all, "detail"] as const,
+  detail: (id: string) => [...exampleKeys.details(), id] as const,
 };
 ```
 
@@ -722,19 +770,19 @@ export const useExampleStore = create<ExampleState>()(
 
 These files live at the project root (outside `src/`):
 
-| File | Purpose |
-|---|---|
-| `vite.config.ts` | Vite build config, path aliases (`@/` → `src/`), plugins |
-| `tsconfig.json` | TypeScript compiler options, path mapping |
-| `tsconfig.app.json` | App-specific TS config (extends base) |
-| `tsconfig.node.json` | Node-specific TS config (Vite config file itself) |
-| `tailwind.config.ts` | Tailwind theme, custom colors, fonts, plugins |
-| `postcss.config.js` | PostCSS plugins (Tailwind, autoprefixer) |
-| `vitest.config.ts` | Test runner config (or collocated in `vite.config.ts`) |
-| `.env` | Local environment variables (git-ignored) |
-| `.env.example` | Documented env var template (committed) |
-| `eslint.config.js` | Linting rules |
-| `prettier.config.js` | Code formatting rules |
+| File                 | Purpose                                                  |
+| -------------------- | -------------------------------------------------------- |
+| `vite.config.ts`     | Vite build config, path aliases (`@/` → `src/`), plugins |
+| `tsconfig.json`      | TypeScript compiler options, path mapping                |
+| `tsconfig.app.json`  | App-specific TS config (extends base)                    |
+| `tsconfig.node.json` | Node-specific TS config (Vite config file itself)        |
+| `tailwind.config.ts` | Tailwind theme, custom colors, fonts, plugins            |
+| `postcss.config.js`  | PostCSS plugins (Tailwind, autoprefixer)                 |
+| `vitest.config.ts`   | Test runner config (or collocated in `vite.config.ts`)   |
+| `.env`               | Local environment variables (git-ignored)                |
+| `.env.example`       | Documented env var template (committed)                  |
+| `eslint.config.js`   | Linting rules                                            |
+| `prettier.config.js` | Code formatting rules                                    |
 
 ### Path Alias Setup
 
@@ -876,22 +924,22 @@ Co-locate with the source code in `__tests__/` directories.
 
 ## Quick Reference Card
 
-| I need to... | I put it in... |
-|---|---|
-| Add a new domain/feature | `features/<name>/` |
-| Create a reusable Button/Modal/Input | `shared/ui/<Name>/` |
-| Configure Axios/Day.js/QueryClient | `shared/lib/` |
-| Add a global constant or route path | `shared/config/` |
-| Create a generic hook like useDebounce | `shared/hooks/` |
-| Build a new page | `pages/<name>/` |
-| Compose multiple features into a header | `widgets/<name>/` |
-| Add a new route | `app/router/routes.tsx` |
-| Add a new provider | `app/providers/` |
-| Validate env variables | `shared/config/env.ts` |
-| Add global error handling | `app/providers/ErrorBoundaryProvider.tsx` |
-| Add feature-scoped error handling | `features/<name>/components/<Name>ErrorBoundary.tsx` |
-| Add MSW mock handlers | `test/mocks/handlers.ts` |
-| Add a test render helper | `test/utils/` |
+| I need to...                            | I put it in...                                       |
+| --------------------------------------- | ---------------------------------------------------- |
+| Add a new domain/feature                | `features/<name>/`                                   |
+| Create a reusable Button/Modal/Input    | `shared/ui/<Name>/`                                  |
+| Configure Axios/Day.js/QueryClient      | `shared/lib/`                                        |
+| Add a global constant or route path     | `shared/config/`                                     |
+| Create a generic hook like useDebounce  | `shared/hooks/`                                      |
+| Build a new page                        | `pages/<name>/`                                      |
+| Compose multiple features into a header | `widgets/<name>/`                                    |
+| Add a new route                         | `app/router/routes.tsx`                              |
+| Add a new provider                      | `app/providers/`                                     |
+| Validate env variables                  | `shared/config/env.ts`                               |
+| Add global error handling               | `app/providers/ErrorBoundaryProvider.tsx`            |
+| Add feature-scoped error handling       | `features/<name>/components/<Name>ErrorBoundary.tsx` |
+| Add MSW mock handlers                   | `test/mocks/handlers.ts`                             |
+| Add a test render helper                | `test/utils/`                                        |
 
 ---
 
