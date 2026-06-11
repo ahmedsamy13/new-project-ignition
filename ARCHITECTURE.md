@@ -69,16 +69,16 @@ This boilerplate follows **Feature-Sliced Design (FSD)**. Think of FSD like a **
 │   │   │   ├── QueryProvider.tsx               # React Query client + config
 │   │   │   ├── ErrorBoundaryProvider.tsx        # Global error boundary
 │   │   │   └── index.ts
-│   ├── router/
-│   │   ├── routes.tsx                      # All route definitions
-│   │   ├── ProtectedRoute.tsx              # Auth guard wrapper
-│   │   ├── PublicRoute.tsx                 # Redirect-if-authenticated wrapper
-│   │   ├── LazyImports.ts                  # Centralized React.lazy() calls
-│   │   └── index.ts
-│   └── styles/
-│       ├── index.css                       # Tailwind directives + global styles
-│       └── fonts.css                       # @font-face declarations
-│
+│   │   ├── router/
+│   │   │   ├── routes.tsx                  # All route definitions
+│   │   │   ├── ProtectedRoute.tsx          # Auth guard wrapper
+│   │   │   ├── PublicRoute.tsx             # Redirect-if-authenticated wrapper
+│   │   │   ├── LazyImports.ts              # Centralized React.lazy() calls
+│   │   │   └── index.ts
+│   │   └── styles/
+│   │       ├── index.css                   # Tailwind directives + global styles
+│   │       └── fonts.css                   # @font-face declarations
+│   │
 ├── pages/                                  # Route-level page compositions
 │   ├── home/
 │   │   ├── HomePage.tsx
@@ -169,6 +169,9 @@ This boilerplate follows **Feature-Sliced Design (FSD)**. Think of FSD like a **
 │   │   ├── ErrorFallback/
 │   │   │   ├── ErrorFallback.tsx           # Generic error UI for boundaries
 │   │   │   └── index.ts
+│   │   ├── ThemeToggle/
+│   │   │   ├── ThemeToggle.tsx
+│   │   │   └── index.ts
 │   │   └── index.ts                        # Barrel: all shared UI
 │   │
 │   ├── layouts/                            # Page layout shells
@@ -216,8 +219,9 @@ This boilerplate follows **Feature-Sliced Design (FSD)**. Think of FSD like a **
 │       ├── renderWithProviders.tsx          # Custom render with all providers
 │       └── testQueryClient.ts              # Isolated QueryClient for tests
 │
-├── env.d.ts                                # ImportMeta env type declarations
-└── vite-env.d.ts                           # Vite client types
+│
+│   ├── env.d.ts                                # ImportMeta env type declarations
+│   └── vite-env.d.ts                           # Vite client types
 ```
 
 ---

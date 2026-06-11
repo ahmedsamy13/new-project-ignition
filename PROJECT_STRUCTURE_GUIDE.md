@@ -89,6 +89,9 @@ This layer contains globally reusable code that knows **nothing** about specific
   - **`Button/Button.tsx`**: A highly reusable button component supporting variants (primary, ghost, danger), sizes (sm, lg, icon), and loading states (disabling the button and showing a spinner).
   - **`Button/Button.stories.tsx`**: Storybook documentation file. It defines the different "Stories" (Primary, Ghost, Loading) so developers can visually test the Button outside of the application.
   - **`Spinner/Spinner.tsx`**: The generic loading indicator. Can be used inside buttons or rendered full-screen for page transitions.
+  - **`Input/Input.tsx`**: A reusable input field for forms.
+  - **`Modal/Modal.tsx`**: A generic overlay modal for dialogs and popups.
+  - **`Card/Card.tsx`**: A surface container component for displaying grouped information.
   - **`ErrorFallback/ErrorFallback.tsx`**: The generic UI shown when a React Error Boundary catches a crash. It displays the error message and a "Try Again" button.
   - **`ThemeToggle/ThemeToggle.tsx`**: A toggle button utilizing Lucide icons to switch the app's `next-themes` state between `light` and `dark` modes visually.
   - **`index.ts`**: Barrel export making these primitives accessible via a clean import: `import { Button, ThemeToggle } from "@/shared/ui"`.
@@ -106,22 +109,32 @@ Features are isolated, vertical slices of business logic. They act as independen
 - **`example-feature/api/exampleApi.ts`**:
   - Defines `exampleKeys`: A dictionary of React Query cache key factories. This ensures cache keys (like `["examples", "list"]`) are strictly typed and never misspelled across the app.
   - Defines the Axios calls (`getAll`, `getById`, `create`) specifically for this domain, using the `apiClient` from `shared/lib`.
+- **`example-feature/api/exampleApi.test.ts`**:
+  - Unit tests for the raw API functions, verifying correct endpoints and data mapping.
 - **`example-feature/types/example.types.ts`**:
   - Defines the domain model interface (e.g., `interface Example { id: string, name: string }`).
   - Defines DTOs (Data Transfer Objects) for what the backend expects when creating/updating.
   - Defines Zod validation schemas to validate forms or incoming API responses securely.
-- **`example-feature/hooks/useExamples.ts`**:
-  - A custom hook wrapping React Query's `useQuery`. It abstracts away the fetching logic so components just call `const { data, isLoading } = useExamples()`. It handles caching, loading states, and background synchronization automatically (Server State).
-- **`example-feature/hooks/useCreateExample.ts`**:
-  - A custom hook wrapping React Query's `useMutation`. It handles sending data to the server. Importantly, on success, it invalidates the cache so lists update automatically, and it triggers a success Toast notification globally.
+- **`example-feature/hooks/`**:
+  - **`useExamples.ts` & `useExample.ts`**: Wrappers around `useQuery` for fetching lists or single items.
+  - **`useCreateExample.ts`, `useUpdateExample.ts`, `useDeleteExample.ts`**: Wrappers around `useMutation` that handle sending data to the server and invalidating cache on success.
+  - **`useExampleFilters.ts`**: A UI-only hook for managing complex filtering logic locally before sending it to the API.
+  - **`__tests__/*.test.ts`**: Unit tests verifying that the hooks fetch data correctly and update cache state.
 - **`example-feature/store/exampleStore.ts`**:
   - A Zustand store. Used **only** for ephemeral Client State (e.g., which items are currently selected by checkboxes, or if a mobile filter panel is open). It never stores data fetched from the API (that is React Query's job).
-- **`example-feature/components/ExampleCard.tsx`**:
-  - A domain-specific UI component. Unlike a generic `Button`, this component specifically requires an `Example` object as a prop. It knows how to render the title, description, and actions for an example. It connects to the Zustand store to handle its selection state.
-- **`example-feature/components/ExampleList.tsx`**:
-  - A "smart" component. It calls the `useExamples` hook, handles loading states (showing a Spinner), and maps over the data to render a grid of `ExampleCard`s.
-- **`example-feature/components/ExampleErrorBoundary.tsx`**:
-  - A localized error boundary. If the `ExampleList` crashes (e.g., backend sends bad data), only this specific section of the page shows an error, leaving the rest of the application completely functional and preventing a total app crash.
+- **`example-feature/store/exampleStore.test.ts`**:
+  - Unit tests for the Zustand store to ensure local state actions mutate the state tree correctly.
+- **`example-feature/components/`**:
+  - **`ExampleCard.tsx`**: A domain-specific UI component rendering an `Example` object.
+  - **`ExampleList.tsx`**: A "smart" component calling the `useExamples` hook and rendering a list of cards.
+  - **`ExampleForm.tsx`**: A specific form for creating or editing examples, wiring up to `useCreateExample` or `useUpdateExample`.
+  - **`ExampleFilters.tsx`**: A UI component that connects to `useExampleFilters` to allow users to filter the list.
+  - **`ExampleErrorBoundary.tsx`**: A localized error boundary. If the `ExampleList` crashes, only this specific section shows an error, leaving the rest of the application functional.
+  - **`__tests__/*.test.tsx`**: Component tests verifying UI rendering and interactions like button clicks.
+- **`example-feature/utils/`**:
+  - **`exampleTransformers.ts`**: Pure functions that map backend API schemas into frontend view models.
+  - **`exampleValidation.ts`**: Pure functions for business logic validation on the client side.
+  - **`__tests__/*.test.ts`**: Unit tests verifying the purity and logic of the utility functions.
 - **`example-feature/index.ts`**:
   - **The Barrel Export (The Contract).** This is the most important file in the feature. It explicitly defines what other parts of the app are allowed to import from this feature. If a component is not exported here, it is considered private to the feature and cannot be used anywhere else.
 
@@ -132,8 +145,20 @@ Features are isolated, vertical slices of business logic. They act as independen
 Pages are incredibly "dumb". They contain almost zero logic. Their sole responsibility is to assemble components from features and shared layouts, then map them to a specific URL route.
 
 - **`home/HomePage.tsx`**: The landing page composition. It renders static text, shared UI buttons, and routing links.
+- **`dashboard/DashboardPage.tsx`**: Maps to the `/dashboard` URL. A protected page composition that can display analytics or user widgets.
 - **`example-feature/ExampleListPage.tsx`**: Maps to the `/examples` URL. It renders a page header, a "Create" button, and embeds the `<ExampleList />` feature component inside the `<ExampleErrorBoundary />`.
 - **`example-feature/ExampleDetailPage.tsx`**: Maps to `/examples/:id`. It uses `useParams` from React Router to read the URL parameter (the ID) and passes that ID down to a feature component to render details for that specific item.
+
+---
+
+### 🧩 `src/widgets/` (Composite UI Blocks)
+
+Widgets are cross-feature UI blocks that combine shared UI elements and potentially pull data from multiple independent domains.
+
+- **`header/Header.tsx`**: The global application header. Designed to compose features like an Auth profile dropdown and a notification bell.
+- **`sidebar/Sidebar.tsx`**: The global navigation sidebar, rendering navigation links based on application routes.
+- **`data-table/DataTable.tsx`**: A composite table structure that can be reused across different features to display tabular data uniformly.
+- **`data-table/DataTableToolbar.tsx`**: A toolbar associated with the data table to provide filtering, search, and bulk actions.
 
 ---
 
@@ -145,3 +170,5 @@ Code here helps us simulate a fake backend and test the application without need
 - **`mocks/handlers.ts`**: Defines MSW network interceptors. Instead of hitting a real backend, when the app requests `/examples`, this file intercepts the call and returns fake JSON data instantly. This allows testing frontend logic without a real backend.
 - **`mocks/browser.ts`**: Sets up MSW for the actual browser. If you start the app with `VITE_ENABLE_MOCKS=true`, you can develop the frontend completely isolated without needing a backend server running at all.
 - **`mocks/server.ts`**: Sets up MSW for a Node.js environment, used strictly when running automated tests via the terminal.
+- **`utils/renderWithProviders.tsx`**: A custom test utility that wraps components in all necessary global providers (like `QueryClientProvider`) during unit tests, ensuring components don't crash when testing React Query hooks.
+- **`utils/testQueryClient.ts`**: An isolated React Query client specifically configured for tests (e.g., with retries disabled to prevent slow test execution).
