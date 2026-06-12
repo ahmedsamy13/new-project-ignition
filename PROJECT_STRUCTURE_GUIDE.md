@@ -79,7 +79,7 @@ This layer contains globally reusable code that knows **nothing** about specific
   - **`common.types.ts`**: Reusable generic types like `ID` or `BaseEntity` (which includes standard fields like `id`, `createdAt`, `updatedAt`).
   - **`index.ts`**: Barrel export.
 - **`utils/`**:
-  - **`cn.ts`**: A crucial UI utility. It combines `clsx` (for writing conditional class logic cleanly) and `tailwind-merge` (to resolve conflicting Tailwind utility classes securely, e.g., merging `p-4` and `p-2` safely).
+  - **`cn.ts`**: (REMOVED) We previously used this to merge Tailwind classes via `clsx` and `tailwind-merge`. We now strictly use native template literals for styling combinations instead of utility libraries to keep logic explicit.
   - **`formatters.ts`**: Pure functions for transforming data for display (e.g., taking a raw ISO date and formatting it to "Jan 12, 2024", or formatting numbers into currency).
   - **`index.ts`**: Barrel export.
 - **`hooks/`**:
@@ -111,10 +111,10 @@ Features are isolated, vertical slices of business logic. They act as independen
   - Defines the Axios calls (`getAll`, `getById`, `create`) specifically for this domain, using the `apiClient` from `shared/lib`.
 - **`example-feature/api/exampleApi.test.ts`**:
   - Unit tests for the raw API functions, verifying correct endpoints and data mapping.
-- **`example-feature/types/example.types.ts`**:
-  - Defines the domain model interface (e.g., `interface Example { id: string, name: string }`).
+- **`example-feature/model/example.schema.ts`**:
+  - Defines Zod validation schemas as the single source of truth for the domain model.
+  - Derives TypeScript interfaces automatically using `z.infer<>`.
   - Defines DTOs (Data Transfer Objects) for what the backend expects when creating/updating.
-  - Defines Zod validation schemas to validate forms or incoming API responses securely.
 - **`example-feature/hooks/`**:
   - **`useExamples.ts` & `useExample.ts`**: Wrappers around `useQuery` for fetching lists or single items.
   - **`useCreateExample.ts`, `useUpdateExample.ts`, `useDeleteExample.ts`**: Wrappers around `useMutation` that handle sending data to the server and invalidating cache on success.

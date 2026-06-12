@@ -16,35 +16,40 @@ src/features/products/
 ├── api/
 ├── components/
 ├── hooks/
+├── model/
 ├── store/
-├── types/
 └── index.ts
 ```
 
 ---
 
-## Step 2: Define Types (Types Layer)
+## Step 2: Data Models & Validation (Zod First)
 
-Always start by defining the shape of your data. This makes writing the rest of the code much easier and prevents errors.
-Go to the `types` folder and create `product.types.ts`.
+Always start by defining the shape of your data using Zod. This acts as the single source of truth for both validation and TypeScript interfaces.
+Go to the `model` folder and create `product.schema.ts`.
 
-**File Path:** `src/features/products/types/product.types.ts`
+**File Path:** `src/features/products/model/product.schema.ts`
 ```typescript
-// Define how a Product looks when it comes from the backend API
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  description: string;
-  createdAt: string;
-}
+import { z } from "zod/v4";
 
-// Define the data needed to create a new Product
-export interface CreateProductDTO {
-  name: string;
-  price: number;
-  description: string;
-}
+// 1. Define the Zod Schema
+export const productSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  price: z.number().positive("Price must be greater than 0"),
+  description: z.string(),
+  createdAt: z.string().datetime(),
+});
+
+export const createProductSchema = productSchema.pick({
+  name: true,
+  price: true,
+  description: true,
+});
+
+// 2. Derive TypeScript Types automatically
+export type Product = z.infer<typeof productSchema>;
+export type CreateProductDTO = z.infer<typeof createProductSchema>;
 ```
 
 ---
@@ -55,8 +60,8 @@ Here we write the functions that talk to the backend to get or send product data
 
 **File Path:** `src/features/products/api/productApi.ts`
 ```typescript
-import { apiClient } from "@/shared/lib";
-import { Product, CreateProductDTO } from "../types/product.types";
+import { apiClient } from "@/shared/lib/axios";
+import { Product, CreateProductDTO } from "../model/product.schema";
 import { ApiResponse } from "@/shared/types"; // Assuming this global type exists
 
 // 1. Query Keys for React Query to avoid spelling mistakes
@@ -125,31 +130,24 @@ export function useCreateProduct() {
 
 ---
 
-## Step 5: Local State Management (Store Layer) - Optional
+## Step 5: Local Component State (useState)
 
-If you need to save local state (for example: which products are currently selected by checkboxes), use `Zustand`. (Remember: Never save API data here! That is React Query's job).
+For UI state that belongs to a specific component (like tracking which products are checked), use React's built-in `useState`. **Do NOT use Zustand for this.** Zustand is strictly reserved for shared, cross-component UI state (like opening a global sidebar).
 
-**File Path:** `src/features/products/store/productStore.ts`
 ```typescript
-import { create } from "zustand";
+import { useState } from "react";
 
-interface ProductState {
-  selectedProductIds: string[];
-  toggleSelection: (id: string) => void;
+export function useProductSelection() {
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => 
+      prev.includes(id) ? prev.filter((pId) => pId !== id) : [...prev, id]
+    );
+  };
+
+  return { selectedIds, toggleSelection };
 }
-
-export const useProductStore = create<ProductState>((set) => ({
-  selectedProductIds: [],
-  toggleSelection: (id) =>
-    set((state) => {
-      if (state.selectedProductIds.includes(id)) {
-        // Remove ID if it already exists
-        return { selectedProductIds: state.selectedProductIds.filter((pId) => pId !== id) };
-      }
-      // Add ID if it doesn't exist
-      return { selectedProductIds: [...state.selectedProductIds, id] };
-    }),
-}));
 ```
 
 ---
@@ -160,7 +158,7 @@ Now we use everything we built to show data on the screen.
 
 **File Path:** `src/features/products/components/ProductCard.tsx`
 ```typescript
-import { Product } from "../types/product.types";
+import { Product } from "../model/product.schema";
 import { Button } from "@/shared/ui"; // Use generic shared components
 
 interface ProductCardProps {
@@ -214,8 +212,9 @@ This step is **very critical**. Other parts of the app are NOT allowed to import
 
 **File Path:** `src/features/products/index.ts`
 ```typescript
-// Export types if another part of the app needs them
-export type { Product } from "./types/product.types";
+// Export types and schemas if another part of the app needs them
+export type { Product } from "./model/product.schema";
+export { productSchema } from "./model/product.schema";
 
 // Export components that will be displayed on Pages
 export { ProductList } from "./components/ProductList";
