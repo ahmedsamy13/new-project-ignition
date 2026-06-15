@@ -1,5 +1,5 @@
 import { apiClient } from "@/shared/lib";
-import type { Example, CreateExampleDTO, UpdateExampleDTO } from "../types";
+import type { Example, CreateExampleDTO, UpdateExampleDTO } from "../model";
 import type { ApiResponse, PaginatedResponse } from "@/shared/types";
 
 // ─── React Query Keys ───────────────────────────────────────────────

@@ -1,5 +1,5 @@
 import { useExampleStore } from "../store";
-import type { Example } from "../types";
+import type { Example } from "../model";
 
 interface ExampleCardProps {
   example: Example;

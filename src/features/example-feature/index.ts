@@ -1,7 +1,8 @@
 // ─── Example Feature: Public API ──────────────────────────────────────
 
 // Types
-export type { Example, CreateExampleDTO, UpdateExampleDTO } from "./types";
+export type { Example, CreateExampleDTO, UpdateExampleDTO } from "./model";
+export { exampleSchema, createExampleSchema, updateExampleSchema } from "./model";
 
 // Store (Client State)
 export { useExampleStore } from "./store";
